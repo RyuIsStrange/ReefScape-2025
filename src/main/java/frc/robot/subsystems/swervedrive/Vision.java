@@ -46,34 +46,32 @@ import swervelib.telemetry.SwerveDriveTelemetry;
  * Example PhotonVision class to aid in the pursuit of accurate odometry. Taken from
  * https://gitlab.com/ironclad_code/ironclad-2024/-/blob/master/src/main/java/frc/robot/vision/Vision.java?ref_type=heads
  */
-public class Vision
-{
-
+public class Vision {
   /**
    * April Tag Field Layout of the year.
    */
-  public static final AprilTagFieldLayout fieldLayout                     = AprilTagFieldLayout.loadField(
-      AprilTagFields.k2025Reefscape);
+  public static final AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
+
   /**
    * Ambiguity defined as a value between (0,1). Used in {@link Vision#filterPose}.
    */
-  private final       double              maximumAmbiguity                = 0.25;
+  private final double maximumAmbiguity = 0.25;
   /**
    * Photon Vision Simulation
    */
-  public              VisionSystemSim     visionSim;
+  public VisionSystemSim visionSim;
   /**
    * Count of times that the odom thinks we're more than 10meters away from the april tag.
    */
-  private             double              longDistangePoseEstimationCount = 0;
+  private double longDistangePoseEstimationCount = 0;
   /**
    * Current pose from the pose estimator using wheel odometry.
    */
-  private             Supplier<Pose2d>    currentPose;
+  private Supplier<Pose2d> currentPose;
   /**
    * Field from {@link swervelib.SwerveDrive#field}
    */
-  private             Field2d             field2d;
+  private Field2d field2d;
 
 
   /**
@@ -146,9 +144,7 @@ public class Vision
       if (poseEst.isPresent())
       {
         var pose = poseEst.get();
-        swerveDrive.addVisionMeasurement(pose.estimatedPose.toPose2d(),
-                                         pose.timestampSeconds,
-                                         camera.curStdDevs);
+        swerveDrive.addVisionMeasurement(pose.estimatedPose.toPose2d(), pose.timestampSeconds, camera.curStdDevs);
       }
     }
 

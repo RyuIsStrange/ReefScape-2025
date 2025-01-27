@@ -62,15 +62,15 @@ public class SwerveSubsystem extends SubsystemBase
   /**
    * Swerve drive object.
    */
-  private final SwerveDrive         swerveDrive;
+  private final SwerveDrive swerveDrive;
   /**
    * AprilTag field layout.
    */
-  private final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2024Crescendo);
+  private final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
   /**
    * Enable vision odometry updates while driving.
    */
-  private final boolean             visionDriveTest     = false;
+  private final boolean visionDriveTest     = false;
   /**
    * PhotonVision class to keep an accurate odometry.
    */
@@ -81,20 +81,17 @@ public class SwerveSubsystem extends SubsystemBase
    *
    * @param directory Directory of swerve drive config files.
    */
-  public SwerveSubsystem(File directory)
-  {
+  public SwerveSubsystem(File directory) {
     // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects being created.
     SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
-    try
-    {
+    try {
       swerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.MAX_SPEED,
                                                                   new Pose2d(new Translation2d(Meter.of(1),
                                                                                                Meter.of(4)),
                                                                              Rotation2d.fromDegrees(0)));
       // Alternative method if you don't want to supply the conversion factor via JSON files.
       // swerveDrive = new SwerveParser(directory).createSwerveDrive(maximumSpeed, angleConversionFactor, driveConversionFactor);
-    } catch (Exception e)
-    {
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
     swerveDrive.setHeadingCorrection(false); // Heading correction should only be used while controlling the robot via angle.
@@ -104,9 +101,8 @@ public class SwerveSubsystem extends SubsystemBase
                                                0.1); //Correct for skew that gets worse as angular velocity increases. Start with a coefficient of 0.1.
     swerveDrive.setModuleEncoderAutoSynchronize(false,
                                                 1); // Enable if you want to resynchronize your absolute encoders and motor encoders periodically when they are not moving.
-//    swerveDrive.pushOffsetsToEncoders(); // Set the absolute encoder to be used over the internal encoder and push the offsets onto it. Throws warning if not possible
-    if (visionDriveTest)
-    {
+    // swerveDrive.pushOffsetsToEncoders(); // Set the absolute encoder to be used over the internal encoder and push the offsets onto it. Throws warning if not possible
+    if (visionDriveTest) {
       setupPhotonVision();
       // Stop the odometry thread if we are using vision that way we can synchronize updates better.
       swerveDrive.stopOdometryThread();
@@ -120,13 +116,11 @@ public class SwerveSubsystem extends SubsystemBase
    * @param driveCfg      SwerveDriveConfiguration for the swerve.
    * @param controllerCfg Swerve Controller.
    */
-  public SwerveSubsystem(SwerveDriveConfiguration driveCfg, SwerveControllerConfiguration controllerCfg)
+  public SwerveSubsystem(SwerveDriveConfiguration driveCfg, SwerveControllerConfiguration controllerCfg) 
   {
-    swerveDrive = new SwerveDrive(driveCfg,
-                                  controllerCfg,
-                                  Constants.MAX_SPEED,
-                                  new Pose2d(new Translation2d(Meter.of(2), Meter.of(0)),
-                                             Rotation2d.fromDegrees(0)));
+    swerveDrive = new SwerveDrive(driveCfg, controllerCfg, Constants.MAX_SPEED,
+      new Pose2d(new Translation2d(Meter.of(2), Meter.of(0)),
+      Rotation2d.fromDegrees(0)));
   }
 
   /**
@@ -149,9 +143,7 @@ public class SwerveSubsystem extends SubsystemBase
   }
 
   @Override
-  public void simulationPeriodic()
-  {
-  }
+  public void simulationPeriodic() {}
 
   /**
    * Setup AutoBuilder for PathPlanner.
@@ -161,8 +153,7 @@ public class SwerveSubsystem extends SubsystemBase
     // Load the RobotConfig from the GUI settings. You should probably
     // store this in your Constants file
     RobotConfig config;
-    try
-    {
+    try {
       config = RobotConfig.fromGUISettings();
 
       final boolean enableFeedforward = true;
@@ -211,8 +202,7 @@ public class SwerveSubsystem extends SubsystemBase
           },
           this
           // Reference to this subsystem to set requirements
-                           );
-
+      );
     } catch (Exception e)
     {
       // Handle exception as needed
@@ -301,18 +291,18 @@ public class SwerveSubsystem extends SubsystemBase
     AtomicReference<Double> previousTime = new AtomicReference<>();
 
     return startRun(() -> previousTime.set(Timer.getFPGATimestamp()),
-                    () -> {
-                      double newTime = Timer.getFPGATimestamp();
-                      SwerveSetpoint newSetpoint = setpointGenerator.generateSetpoint(prevSetpoint.get(),
-                                                                                      robotRelativeChassisSpeed.get(),
-                                                                                      newTime - previousTime.get());
-                      swerveDrive.drive(newSetpoint.robotRelativeSpeeds(),
-                                        newSetpoint.moduleStates(),
-                                        newSetpoint.feedforwards().linearForces());
-                      prevSetpoint.set(newSetpoint);
-                      previousTime.set(newTime);
-
-                    });
+      () -> {
+        double newTime = Timer.getFPGATimestamp();
+        SwerveSetpoint newSetpoint = setpointGenerator.generateSetpoint(prevSetpoint.get(),
+          robotRelativeChassisSpeed.get(), newTime - previousTime.get());
+        
+        swerveDrive.drive(newSetpoint.robotRelativeSpeeds(),
+          newSetpoint.moduleStates(),
+          newSetpoint.feedforwards().linearForces());
+        
+        prevSetpoint.set(newSetpoint);
+        previousTime.set(newTime);
+      });
   }
 
   /**
