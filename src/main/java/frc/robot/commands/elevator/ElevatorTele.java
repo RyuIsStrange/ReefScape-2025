@@ -24,7 +24,7 @@ public class ElevatorTele extends Command {
     @Override
     public void end(boolean interrupted) {}
   
-    // Returns true when the command should end.
+    // Returns true when the command should end. 
     @Override
     public boolean isFinished() {
       return false;
