@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import swervelib.math.Matter;
 
 /**
@@ -18,6 +19,13 @@ import swervelib.math.Matter;
  */
 public final class Constants
 {
+  public static final CommandXboxController driverController = new CommandXboxController(DriveteamConstants.kDriverControllerPort);
+  public static final CommandXboxController operatorController = new CommandXboxController(DriveteamConstants.kOperatorControllerPort);
+
+  public static class DriveteamConstants {
+    public static final int kDriverControllerPort = 0;
+    public static final int kOperatorControllerPort = 1;
+  }
 
   public static final double ROBOT_MASS = (148 - 20.3) * 0.453592; // 32lbs * kg per pound
   public static final Matter CHASSIS    = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
@@ -34,16 +42,13 @@ public final class Constants
 
   public static final class DrivebaseConstants
   {
-
     // Hold time on motor brakes when disabled
     public static final double WHEEL_LOCK_TIME = 10; // seconds
   }
 
   public static class OperatorConstants
   {
-
     // Joystick Deadband
-
     /*
      * May need to up deadband
      */
