@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.config.PIDConstants;
+
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -40,14 +42,12 @@ public final class Constants
 //    public static final PIDConstants ANGLE_PID       = new PIDConstants(0.4, 0, 0.01);
 //  }
 
-  public static final class DrivebaseConstants
-  {
+  public static final class DrivebaseConstants {
     // Hold time on motor brakes when disabled
     public static final double WHEEL_LOCK_TIME = 10; // seconds
   }
 
-  public static class OperatorConstants
-  {
+  public static class OperatorConstants {
     // Joystick Deadband
     /*
      * May need to up deadband
@@ -56,5 +56,11 @@ public final class Constants
     public static final double LEFT_Y_DEADBAND = 0.1;
     public static final double RIGHT_X_DEADBAND = 0.1;
     public static final double TURN_CONSTANT    = 6;
+  }
+
+  public static class SubMotorIDs {
+    public static final int kElevatorID = 13;
+    public static final int kShooterMLeft = 14;
+    public static final int lShooterMRight = 15;
   }
 }
