@@ -1,4 +1,4 @@
-package frc.robot.subsystems.elevator;
+package frc.robot.subsystems;
 
 import java.util.function.DoubleSupplier;
 import com.revrobotics.spark.SparkMax;
@@ -18,7 +18,7 @@ import frc.robot.Constants;
 public class ElevatorSubsystem extends SubsystemBase {
     private final SparkMax m_Elevator;
     private final SparkMaxConfig config = new SparkMaxConfig();
-
+    
     private final ProfiledPIDController m_elePIDController = new ProfiledPIDController(E_PIDF.Proportion, E_PIDF.Integral, E_PIDF.Derivative, E_PIDF.Constraints);
 
     public ElevatorSubsystem() {

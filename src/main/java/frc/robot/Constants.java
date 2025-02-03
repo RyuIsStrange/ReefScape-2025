@@ -61,6 +61,6 @@ public final class Constants
   public static class SubMotorIDs {
     public static final int kElevatorID = 13;
     public static final int kShooterMLeft = 14;
-    public static final int lShooterMRight = 15;
+    public static final int kShooterMRight = 15;
   }
 }
