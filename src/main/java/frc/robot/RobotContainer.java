@@ -82,9 +82,9 @@ public class RobotContainer {
 
   public RobotContainer()
   {
-    // Configure the trigger bindings
-    configureBindings();
-    // Finally
+    // Get our auto commands.
+    pathplannerCommands();
+
     DriverStation.silenceJoystickConnectionWarning(true);
 
     // Create the autochooser for the driver station dashboard
@@ -93,6 +93,9 @@ public class RobotContainer {
 
     // Forward port 5800 for photonvision
     PortForwarder.add(5800, "photonvision.local", 5800);
+
+    // Configure the trigger bindings
+    configureBindings();
   }
 
   private void configureBindings() {
@@ -107,6 +110,11 @@ public class RobotContainer {
     Constants.driverController.axisGreaterThan(1, 0.1).whileTrue(m_elevator.ManualRun(driverXbox::getLeftY));
     Constants.driverController.axisLessThan(1, -0.1).whileTrue(m_elevator.ManualRun(driverXbox::getLeftY));
   }
+
+  public void pathplannerCommands() {
+    NamedCommands.registerCommand("Elevator", m_elevator.runElevator(100));
+  }
+
 
   /**
    * Try this to see if I can clear space in configureBindings
