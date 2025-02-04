@@ -107,12 +107,11 @@ public class RobotContainer {
     // Constants.driverController.x().onTrue(Commands.runOnce(drivebase::addFakeVisionReading));
     // Constants.driverController.b().whileTrue(drivebase.driveToPose(new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0))));
 
-    Constants.driverController.axisGreaterThan(1, 0.1).whileTrue(m_elevator.ManualRun(driverXbox::getLeftY));
-    Constants.driverController.axisLessThan(1, -0.1).whileTrue(m_elevator.ManualRun(driverXbox::getLeftY));
+    Constants.driverController.x().onTrue(m_elevator.runElev(Constants.ElevatorSetpoints.L1SETPOINT));
   }
 
   public void pathplannerCommands() {
-    NamedCommands.registerCommand("Elevator", m_elevator.runElevator(100));
+    NamedCommands.registerCommand("Elevator", null);
   }
 
 

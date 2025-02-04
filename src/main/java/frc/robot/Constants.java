@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.config.PIDConstants;
-
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -56,6 +54,14 @@ public final class Constants
     public static final double LEFT_Y_DEADBAND = 0.1;
     public static final double RIGHT_X_DEADBAND = 0.1;
     public static final double TURN_CONSTANT    = 6;
+  }
+
+  public static class ElevatorSetpoints {
+    static double L0SETPOINT = 0;
+    static double L1SETPOINT = 10;
+    static double L2SETPOINT = 150;
+    static double L3SETPOINT = 200;
+    static double L4SETPOINT = 250;
   }
 
   public static class SubMotorIDs {
