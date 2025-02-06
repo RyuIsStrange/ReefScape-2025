@@ -24,6 +24,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.ElevatorSubsystemEnc;
+import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import java.io.File;
 import swervelib.SwerveInputStream;
@@ -36,6 +38,8 @@ public class RobotContainer {
   final CommandXboxController driverXbox = new CommandXboxController(0);
 
   final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
+  final ElevatorSubsystemEnc m_elevatorEnc = new ElevatorSubsystemEnc();
+  final ShooterSubsystem m_shooter = new ShooterSubsystem();
 
   private final SendableChooser<Command> autoChooser;
 
@@ -107,9 +111,30 @@ public class RobotContainer {
     // Constants.driverController.x().onTrue(Commands.runOnce(drivebase::addFakeVisionReading));
     // Constants.driverController.b().whileTrue(drivebase.driveToPose(new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0))));
 
-    Constants.driverController.x().onTrue(m_elevator.runElev(Constants.ElevatorSetpoints.L1SETPOINT));
+    Constants.driverController.x().onTrue(m_elevatorEnc.runElev(Constants.ElevatorSetpoints.L1SETPOINT));
+
+    // Shooter
+    Constants.operatorController.axisGreaterThan(1,0.1).onTrue(m_shooter.runShooter(0.25));
+    Constants.operatorController.axisLessThan(1,-0.1).onTrue(m_shooter.runShooter(-0.25));
+    // Elevator
+    Constants.operatorController.rightBumper().onTrue(m_elevator.runElevBtm()); // Left Bumper for Bottom
+    Constants.operatorController.povDown().onTrue(m_elevator.runElevL1()); // Down on the DPad for L1
+    Constants.operatorController.povLeft().onTrue(m_elevator.runElevL2()); // Left on the DPad for L2
+    Constants.operatorController.povRight().onTrue(m_elevator.runElevL3()); // Right on the DPad for L3
+    Constants.operatorController.povUp().onTrue(m_elevator.runElevL4()); // Up on the DPad for L4
+    // AprilTags 
+    // https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/Apriltag_Images_and_User_Guide.pdf (pg 2 for map)
+    Constants.operatorController.b(); // Track close right (17/8) 
+    Constants.operatorController.a(); // Track close mid (18/7)
+    Constants.operatorController.x(); // Track close left (19/6)
+    Constants.operatorController.y(); // Track far right (22/9)
+    Constants.operatorController.rightBumper(); // Track far mid (21/10)
+    Constants.operatorController.rightTrigger(0.1); // Track far left (20/11)
   }
 
+  /**
+   * Register the auto Commands
+   */
   public void pathplannerCommands() {
     NamedCommands.registerCommand("Elevator", null);
   }
