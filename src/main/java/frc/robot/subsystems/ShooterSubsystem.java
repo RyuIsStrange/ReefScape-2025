@@ -7,6 +7,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -23,7 +24,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
         // Set the motor configs
         config_Left
-            .idleMode(IdleMode.kCoast)
+            .inverted(true)
+            .idleMode(IdleMode.kBrake)
             ; // Leave this here to make config happy 
 
         // Apply the motor configuration
@@ -36,10 +38,24 @@ public class ShooterSubsystem extends SubsystemBase {
     
         // Set the motor configs
         config_Right
-            .idleMode(IdleMode.kCoast)
+            .idleMode(IdleMode.kBrake)
             ; // Leave this here to make config happy
 
         // Apply the motor configuration
         m_rightShooter.configure(config_Right, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    }
+
+    public Command runShooter(double speed) {
+        return(run(() -> {
+            m_leftShooter.set(speed);
+            m_rightShooter.set(speed);
+        }));
+    }
+
+    public Command stopShooter() {
+        return(run(() -> {
+            m_leftShooter.set(0);
+            m_rightShooter.set(0);
+        }));
     }
 }
