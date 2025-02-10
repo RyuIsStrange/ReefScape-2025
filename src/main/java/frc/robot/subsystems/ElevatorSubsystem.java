@@ -42,7 +42,6 @@ public class ElevatorSubsystem extends SubsystemBase {
         }).until(switchStates(m_bottomLimit))
         .andThen(ManualStop());
     }
-
     public Command runElevL1() {
         return runOnce(() -> 
             m_Elevator.set(.2)
@@ -80,8 +79,10 @@ public class ElevatorSubsystem extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putNumber("Elevator Encoder", m_Elevator.getEncoder().getPosition());
         
-        if (m_bottomLimit.get() || m_upperLimit.get()) {
+        if (!m_bottomLimit.get()) {
             m_Elevator.getEncoder().setPosition(0);
+        } else if (!m_upperLimit.get()) {
+            m_Elevator.set(0);
         }
     }
 }
