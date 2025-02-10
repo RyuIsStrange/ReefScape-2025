@@ -24,7 +24,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.ElevatorSubsystem;
-import frc.robot.subsystems.ElevatorSubsystemEnc;
+// import frc.robot.subsystems.ElevatorSubsystemEnc; req subsystem code isn't in github
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import java.io.File;
@@ -38,8 +38,8 @@ public class RobotContainer {
   final CommandXboxController driverXbox = new CommandXboxController(0);
 
   final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
-  final ElevatorSubsystemEnc m_elevatorEnc = new ElevatorSubsystemEnc();
   final ShooterSubsystem m_shooter = new ShooterSubsystem();
+  // final ElevatorSubsystemEnc m_elevatorEnc = new ElevatorSubsystemEnc(); req subsystem code isn't in github
 
   private final SendableChooser<Command> autoChooser;
 
@@ -111,7 +111,7 @@ public class RobotContainer {
     // Constants.driverController.x().onTrue(Commands.runOnce(drivebase::addFakeVisionReading));
     // Constants.driverController.b().whileTrue(drivebase.driveToPose(new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0))));
 
-    Constants.driverController.x().onTrue(m_elevatorEnc.runElev(Constants.ElevatorSetpoints.L1SETPOINT));
+    // Constants.driverController.x().onTrue(m_elevatorEnc.runElev(Constants.ElevatorSetpoints.L1SETPOINT)); // Keep Commeneted, req subsystem code isn't in github
 
     // Shooter
     Constants.operatorController.axisGreaterThan(1,0.1).onTrue(m_shooter.runShooter(0.25));
