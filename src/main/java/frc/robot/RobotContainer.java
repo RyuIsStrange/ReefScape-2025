@@ -124,7 +124,7 @@ public class RobotContainer {
     Constants.operatorController.povUp().onTrue(m_elevator.runElevL4()); // Up on the DPad for L4
     // AprilTags 
     // https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/Apriltag_Images_and_User_Guide.pdf (pg 2 for map)
-    Constants.operatorController.b(); // Track close right (17/8) 
+    Constants.operatorController.b().onTrue(Commands.runOnce(null)); // Track close right (17/8) 
     Constants.operatorController.a(); // Track close mid (18/7)
     Constants.operatorController.x(); // Track close left (19/6)
     Constants.operatorController.y(); // Track far right (22/9)
