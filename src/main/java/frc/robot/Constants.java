@@ -56,14 +56,6 @@ public final class Constants
     public static final double TURN_CONSTANT    = 6;
   }
 
-  public static class ElevatorSetpoints {
-    static double L0SETPOINT = 0;
-    static double L1SETPOINT = 10;
-    static double L2SETPOINT = 150;
-    static double L3SETPOINT = 200;
-    static double L4SETPOINT = 250;
-  }
-
   public static class SubMotorIDs {
     public static final int kElevatorID = 13;
     public static final int kShooterMLeft = 14;
