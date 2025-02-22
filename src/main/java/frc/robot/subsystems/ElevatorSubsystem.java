@@ -67,7 +67,11 @@ public class ElevatorSubsystem extends SubsystemBase {
         .andThen(ManualStop());
     }
 
-    // Stop
+    // Manual Controls
+
+    public Command ManualRun(double speed) {
+        return run(() -> m_Elevator.set(speed));
+    }
 
     public Command ManualStop() {
         return run(() -> 
