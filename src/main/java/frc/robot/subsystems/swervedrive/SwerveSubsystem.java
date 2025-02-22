@@ -283,7 +283,7 @@ public class SwerveSubsystem extends SubsystemBase
         // Speed Reducer
         var speedRed = 1.0;
         // should we overwrite default, also make sure its not 0
-        if (limitSpeed < 1.0 && limitSpeed > 0.0) {speedRed = limitSpeed;} if (limitSpeed == 0.0) {speedRed = 1.0;} 
+        if (limitSpeed < 1.0 && limitSpeed > 0.0) {speedRed = limitSpeed;}
         var forward = ((targDis - targetRange) * apirlTagsDrive.kP * Constants.MAX_SPEED) * speedRed;
         drive(
           getTargetSpeeds(
