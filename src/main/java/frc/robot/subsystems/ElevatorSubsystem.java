@@ -1,9 +1,8 @@
 package frc.robot.subsystems;
 
+import java.util.List;
+import java.util.Map;
 import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -24,7 +23,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final DigitalInput m_L2 = new DigitalInput(2);
     private final DigitalInput m_L3 = new DigitalInput(3);
     private final DigitalInput m_L4 = new DigitalInput(4);
-    private final DigitalInput m_upperLimit = new DigitalInput(5);
+    // private final DigitalInput m_upperLimit = new DigitalInput(5); // We dont have rn
 
     public ElevatorSubsystem() {
         m_Elevator = new SparkMax(Constants.SubMotorIDs.kElevatorID, MotorType.kBrushless);
@@ -38,36 +37,91 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public Command runElevBtm() {
         return runOnce(() -> {
-            m_Elevator.set(-0.2);
-        }).until(switchStates(m_bottomLimit))
+            m_Elevator.set(-0.5);
+        })
+        .until(switchStates(m_bottomLimit)) // Go until bottom limit switch
         .andThen(ManualStop());
     }
     public Command runElevL1() {
         return runOnce(() -> 
-            m_Elevator.set(.2)
-        ).until(switchStates(m_L1))
+            m_Elevator.set(.5)
+        )
+        .until(switchStates(m_L1)) // go until L1 switch
         .andThen(ManualStop());
     }
     public Command runElevL2() {
         return run(() -> {
-            m_Elevator.set(.2);
-        }).until(switchStates(m_L2))
+            m_Elevator.set(.5);
+        })
+        .until(switchStates(m_L2)) // go until L2 switch
         .andThen(ManualStop());
     }
     public Command runElevL3() {
         return run(() -> {
-            m_Elevator.set(.2);
-        }).until(switchStates(m_L3))
+            m_Elevator.set(.5);
+        })
+        .until(switchStates(m_L3)) // go until L3 switch
         .andThen(ManualStop());
     }
     public Command runElevL4() {
         return run(() -> {
-            m_Elevator.set(.2);
-        }).until(switchStates(m_L4))
+            m_Elevator.set(.5);
+        })
+        .until(switchStates(m_L4)) // go until this one
         .andThen(ManualStop());
     }
 
-    // Stop
+    /**
+     * Determines if the current level is above the target level
+     */
+    private boolean isAbove(DigitalInput current, DigitalInput target) {
+        List<DigitalInput> levels = List.of(m_bottomLimit, m_L1, m_L2, m_L3, m_L4);
+        return levels.indexOf(current) > levels.indexOf(target);
+    }
+
+    public Command NewEle(String level) {
+        // Map level names to corresponding limit switches
+        Map<String, DigitalInput> levelMap = Map.of(
+            "Bottom", m_bottomLimit,
+            "L1", m_L1,
+            "L2", m_L2,
+            "L3", m_L3,
+            "L4", m_L4
+        );
+
+        // Ensure the requested level exists
+        if (!levelMap.containsKey(level)) {
+            return ManualStop();
+        }
+
+        DigitalInput targetSwitch = levelMap.get(level);
+
+        return run(() -> {
+            // Find the current position by checking which switch is triggered first (false = triggered)
+            DigitalInput currentLevel = null;
+            if (!m_L4.get()) currentLevel = m_L4;
+            else if (!m_L3.get()) currentLevel = m_L3;
+            else if (!m_L2.get()) currentLevel = m_L2;
+            else if (!m_L1.get()) currentLevel = m_L1;
+            else if (!m_bottomLimit.get()) currentLevel = m_bottomLimit;
+    
+            if (currentLevel == null || currentLevel == targetSwitch) {
+                m_Elevator.set(0); // Already at the desired level, stop motor
+            } else if (isAbove(currentLevel, targetSwitch)) {
+                m_Elevator.set(-0.8); // Move down
+            } else {
+                m_Elevator.set(0.2); // Move up
+            }
+        })
+        .until(switchStates(targetSwitch))
+        .andThen(ManualStop());
+    }
+
+    // Manual Controls
+
+    public Command ManualRun(double speed) {
+        return run(() -> m_Elevator.set(speed));
+    }
 
     public Command ManualStop() {
         return run(() -> 
@@ -78,12 +132,6 @@ public class ElevatorSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         SmartDashboard.putNumber("Elevator Encoder", m_Elevator.getEncoder().getPosition());
-        
-        if (!m_bottomLimit.get()) {
-            m_Elevator.getEncoder().setPosition(0);
-        } else if (!m_upperLimit.get()) {
-            m_Elevator.set(0);
-        }
     }
 }
 

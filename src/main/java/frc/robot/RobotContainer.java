@@ -6,10 +6,6 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.math.geometry.Translation2d;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -17,6 +13,7 @@ import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,12 +21,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.ElevatorSubsystem;
-// import frc.robot.subsystems.ElevatorSubsystemEnc; req subsystem code isn't in github
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
-
 import java.io.File;
-import java.util.function.Supplier;
 import swervelib.SwerveInputStream;
 
 
@@ -38,7 +32,6 @@ public class RobotContainer {
   private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
   final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
   final ShooterSubsystem m_shooter = new ShooterSubsystem();
-  // final ElevatorSubsystemEnc m_elevatorEnc = new ElevatorSubsystemEnc(); req subsystem code isn't in github
   private final SendableChooser<Command> autoChooser;
 
   public RobotContainer()
@@ -59,6 +52,8 @@ public class RobotContainer {
     configureBindings();
   }
 
+  boolean newEle = true;
+
   private void configureBindings() {
     setDriveMode();
 
@@ -68,32 +63,58 @@ public class RobotContainer {
     // Constants.driverController.x().onTrue(Commands.runOnce(drivebase::addFakeVisionReading));
     // Constants.driverController.b().whileTrue(drivebase.driveToPose(new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0))));
 
-    // Constants.driverController.x().onTrue(m_elevatorEnc.runElev(Constants.ElevatorSetpoints.L1SETPOINT)); // Keep Commeneted, req subsystem code isn't in github
-
     // Shooter
-    Constants.operatorController.axisGreaterThan(1,0.1).onTrue(m_shooter.runShooter(0.25));
-    Constants.operatorController.axisLessThan(1,-0.1).onTrue(m_shooter.runShooter(-0.25));
+    Constants.operatorController.axisGreaterThan(1,0.1).onTrue(m_shooter.runShooter(1));
+    Constants.operatorController.axisLessThan(1,-0.1).onTrue(m_shooter.runShooter(-1));
     // Elevator
-    Constants.operatorController.rightBumper().onTrue(m_elevator.runElevBtm()); // Left Bumper for Bottom
-    Constants.operatorController.povDown().onTrue(m_elevator.runElevL1()); // Down on the DPad for L1
-    Constants.operatorController.povLeft().onTrue(m_elevator.runElevL2()); // Left on the DPad for L2
-    Constants.operatorController.povRight().onTrue(m_elevator.runElevL3()); // Right on the DPad for L3
-    Constants.operatorController.povUp().onTrue(m_elevator.runElevL4()); // Up on the DPad for L4
+    if (newEle) {
+      Constants.operatorController.rightBumper().onTrue(m_elevator.NewEle("Bottom")); // Left Bumper for Bottom
+      Constants.operatorController.povDown().onTrue(m_elevator.NewEle("L1")); // Down on the DPad for L1
+      Constants.operatorController.povLeft().onTrue(m_elevator.NewEle("L2")); // Left on the DPad for L2
+      Constants.operatorController.povRight().onTrue(m_elevator.NewEle("L3")); // Right on the DPad for L3
+      Constants.operatorController.povUp().onTrue(m_elevator.NewEle("L4")); // Up on the DPad for L4
+    } else {
+      Constants.operatorController.rightBumper().onTrue(m_elevator.runElevBtm()); // Left Bumper for Bottom
+      Constants.operatorController.povDown().onTrue(m_elevator.runElevL1()); // Down on the DPad for L1
+      Constants.operatorController.povLeft().onTrue(m_elevator.runElevL2()); // Left on the DPad for L2
+      Constants.operatorController.povRight().onTrue(m_elevator.runElevL3()); // Right on the DPad for L3
+      Constants.operatorController.povUp().onTrue(m_elevator.runElevL4()); // Up on the DPad for L4
+    }
+    // Elevator Manual
+    Constants.operatorController.povUp().onTrue(m_elevator.ManualRun(0.9)).onFalse(m_elevator.ManualStop());
+    Constants.operatorController.povDown().onTrue(m_elevator.ManualRun(-0.9)).onFalse(m_elevator.ManualStop());
+
     // AprilTags 
     // https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/Apriltag_Images_and_User_Guide.pdf (pg 2 for map)
-    Constants.operatorController.b(); // Track close right (17/8) 
-    Constants.operatorController.a(); // Track close mid (18/7)
-    Constants.operatorController.x(); // Track close left (19/6)
-    Constants.operatorController.y(); // Track far right (22/9)
-    Constants.operatorController.rightBumper(); // Track far mid (21/10)
-    Constants.operatorController.rightTrigger(0.1); // Track far left (20/11)
+    if (Constants.alliance.isPresent() && Constants.alliance.get() == Alliance.Blue) {
+      Constants.operatorController.b().whileTrue(drivebase.aimAndDrive(17, 0, .2)); // Track close right (17/8) 
+      Constants.operatorController.a().whileTrue(drivebase.aimAndDrive(18, 0, .2));; // Track close mid (18/7)
+      Constants.operatorController.x().whileTrue(drivebase.aimAndDrive(19, 0, .2));; // Track close left (19/6)
+      Constants.operatorController.y().whileTrue(drivebase.aimAndDrive(22, 0, .2));; // Track far right (22/9)
+      Constants.operatorController.rightBumper().whileTrue(drivebase.aimAndDrive(21, 0, .2));; // Track far mid (21/10)
+      Constants.operatorController.rightTrigger(0.1).whileTrue(drivebase.aimAndDrive(20, 0, .2));; // Track far left (20/11)
+    } else { // Assume Red if not blue or no alliance present
+      Constants.operatorController.b().whileTrue(drivebase.aimAndDrive(8, 0, .2)); // Track close right (17/8) 
+      Constants.operatorController.a().whileTrue(drivebase.aimAndDrive(7, 0, .2)); // Track close mid (18/7)
+      Constants.operatorController.x().whileTrue(drivebase.aimAndDrive(6, 0, .2)); // Track close left (19/6)
+      Constants.operatorController.y().whileTrue(drivebase.aimAndDrive(9, 0, .2)); // Track far right (22/9)
+      Constants.operatorController.rightBumper().whileTrue(drivebase.aimAndDrive(10, 0, .2)); // Track far mid (21/10)
+      Constants.operatorController.rightTrigger(0.1).whileTrue(drivebase.aimAndDrive(11, 0, .2)); // Track far left (20/11)
+    }
   }
 
   /**
    * Register the auto Commands
    */
   public void pathplannerCommands() {
-    NamedCommands.registerCommand("Elevator", null);
+    NamedCommands.registerCommand("ElevatorBottom", m_elevator.runElevBtm());
+    NamedCommands.registerCommand("ElevatorL1", m_elevator.runElevL1());
+    NamedCommands.registerCommand("ElevatorL2", m_elevator.runElevL2());
+    NamedCommands.registerCommand("ElevatorL3", m_elevator.runElevL3());
+    NamedCommands.registerCommand("ElevatorL4", m_elevator.runElevL4());
+    NamedCommands.registerCommand("ElevatorStop", m_elevator.ManualStop());
+    NamedCommands.registerCommand("RunShooter", m_shooter.runShooter(1));
+    NamedCommands.registerCommand("StopShooter", m_shooter.stopShooter());
   }
 
   public Command getAutonomousCommand()
