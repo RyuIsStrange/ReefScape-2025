@@ -274,7 +274,6 @@ public class SwerveSubsystem extends SubsystemBase
         }
       }
       if (targetVisible == true) {
-        /* insert math here? */
         // 0 is the target angle
         var turn = (0 - targetYaw) * apirlTagsAngle.kP * Constants.MAX_SPEED;
         // 1.25 is the target distance in meters
