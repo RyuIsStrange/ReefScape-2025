@@ -13,7 +13,7 @@
         {
           "type": "named",
           "data": {
-            "name": "ElevatorL1"
+            "name": "RunShooter"
           }
         },
         {
@@ -25,7 +25,7 @@
         {
           "type": "named",
           "data": {
-            "name": "ElevatorStop"
+            "name": "StopShooter"
           }
         }
       ]
