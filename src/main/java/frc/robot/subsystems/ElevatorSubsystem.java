@@ -36,7 +36,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     public Command runElevBtm() {
-        return runOnce(() -> {
+        return run(() -> {
             m_Elevator.set(-0.5);
         })
         .until(switchStates(m_bottomLimit)) // Go until bottom limit switch
@@ -79,6 +79,8 @@ public class ElevatorSubsystem extends SubsystemBase {
         return levels.indexOf(current) > levels.indexOf(target);
     }
 
+    DigitalInput currentLevel = null;
+
     public Command NewEle(String level) {
         // Map level names to corresponding limit switches
         Map<String, DigitalInput> levelMap = Map.of(
@@ -98,7 +100,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 
         return run(() -> {
             // Find the current position by checking which switch is triggered first (false = triggered)
-            DigitalInput currentLevel = null;
             if (!m_L4.get()) currentLevel = m_L4;
             else if (!m_L3.get()) currentLevel = m_L3;
             else if (!m_L2.get()) currentLevel = m_L2;
@@ -108,9 +109,9 @@ public class ElevatorSubsystem extends SubsystemBase {
             if (currentLevel == null || currentLevel == targetSwitch) {
                 m_Elevator.set(0); // Already at the desired level, stop motor
             } else if (isAbove(currentLevel, targetSwitch)) {
-                m_Elevator.set(-0.8); // Move down
+                m_Elevator.set(-1); // Move down
             } else {
-                m_Elevator.set(0.2); // Move up
+                m_Elevator.set(1); // Move up
             }
         })
         .until(switchStates(targetSwitch))
@@ -132,6 +133,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         SmartDashboard.putNumber("Elevator Encoder", m_Elevator.getEncoder().getPosition());
+        System.out.println(currentLevel);
     }
 }
 
