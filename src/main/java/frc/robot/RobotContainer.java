@@ -25,14 +25,18 @@ import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import java.io.File;
 import swervelib.SwerveInputStream;
-
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
 public class RobotContainer {
-  final CommandXboxController driverXbox = new CommandXboxController(0);
   private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
+  final CommandXboxController driverXbox = new CommandXboxController(0);
   final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
   final ShooterSubsystem m_shooter = new ShooterSubsystem();
   private final SendableChooser<Command> autoChooser;
+  private final double maxStrafeSpeed = 0.2; // Adjust this as needed
 
   public RobotContainer()
   {
@@ -101,6 +105,18 @@ public class RobotContainer {
       Constants.operatorController.rightBumper().whileTrue(drivebase.aimAndDrive(10, 0, .2)); // Track far mid (21/10)
       Constants.operatorController.rightTrigger(0.1).whileTrue(drivebase.aimAndDrive(11, 0, .2)); // Track far left (20/11)
     }
+
+    new Trigger(() -> driverXbox.getLeftTriggerAxis() > 0.1 || driverXbox.getRightTriggerAxis() > 0.1)
+      .whileTrue(new RunCommand(() -> {
+        double leftTrigger = driverXbox.getLeftTriggerAxis();
+        double rightTrigger = driverXbox.getRightTriggerAxis();
+
+        // Calculate strafe speed: leftTrigger moves left, rightTrigger moves right
+        double strafeSpeed = (rightTrigger - leftTrigger) * maxStrafeSpeed;
+
+        // Robot-relative strafe (no forward/backward movement, no rotation)
+        drivebase.drive(new ChassisSpeeds(0, strafeSpeed, 0));
+    }, drivebase));
   }
 
   /**
