@@ -67,25 +67,25 @@ public class RobotContainer {
     // Constants.driverController.b().whileTrue(drivebase.driveToPose(new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0))));
 
     // Shooter
-    Constants.operatorController.axisGreaterThan(1,0.1).onTrue(m_shooter.runShooter(1));
-    Constants.operatorController.axisLessThan(1,-0.1).onTrue(m_shooter.runShooter(-1));
+    Constants.operatorController.axisGreaterThan(1,0.25).onTrue(m_shooter.runShooter(0.8)).onFalse(m_shooter.stopShooter());
+    Constants.operatorController.axisLessThan(1,-0.25).onTrue(m_shooter.runShooter(-0.8)).onFalse(m_shooter.stopShooter());
     // Elevator
     if (newEle) {
-      Constants.operatorController.rightBumper().onTrue(m_elevator.NewEle("Bottom")); // Left Bumper for Bottom
+      Constants.operatorController.leftBumper().onTrue(m_elevator.NewEle("Bottom")); // Left Bumper for Bottom
       Constants.operatorController.povDown().onTrue(m_elevator.NewEle("L1")); // Down on the DPad for L1
       Constants.operatorController.povLeft().onTrue(m_elevator.NewEle("L2")); // Left on the DPad for L2
       Constants.operatorController.povRight().onTrue(m_elevator.NewEle("L3")); // Right on the DPad for L3
       Constants.operatorController.povUp().onTrue(m_elevator.NewEle("L4")); // Up on the DPad for L4
     } else {
-      Constants.operatorController.rightBumper().onTrue(m_elevator.runElevBtm()); // Left Bumper for Bottom
+      Constants.operatorController.leftBumper().onTrue(m_elevator.runElevBtm()); // Left Bumper for Bottom
       Constants.operatorController.povDown().onTrue(m_elevator.runElevL1()); // Down on the DPad for L1
       Constants.operatorController.povLeft().onTrue(m_elevator.runElevL2()); // Left on the DPad for L2
       Constants.operatorController.povRight().onTrue(m_elevator.runElevL3()); // Right on the DPad for L3
       Constants.operatorController.povUp().onTrue(m_elevator.runElevL4()); // Up on the DPad for L4
     }
     // Elevator Manual
-    Constants.operatorController.povUp().onTrue(m_elevator.ManualRun(0.9)).onFalse(m_elevator.ManualStop());
-    Constants.operatorController.povDown().onTrue(m_elevator.ManualRun(-0.9)).onFalse(m_elevator.ManualStop());
+    Constants.operatorController.leftTrigger(.1).onTrue(m_elevator.ManualRun(1)).onFalse(m_elevator.ManualStop());
+    Constants.operatorController.start().onTrue(m_elevator.ManualRun(-1)).onFalse(m_elevator.ManualStop());
 
     // AprilTags 
     // https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/Apriltag_Images_and_User_Guide.pdf (pg 2 for map)
