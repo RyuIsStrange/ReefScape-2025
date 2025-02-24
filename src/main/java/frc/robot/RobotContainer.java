@@ -7,6 +7,10 @@ package frc.robot;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.auto.AutoBuilder;
+
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.cscore.VideoSource.ConnectionStrategy;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.PortForwarder;
@@ -37,6 +41,7 @@ public class RobotContainer {
   private final SendableChooser<Command> autoChooser;
   private final double maxStrafeSpeed = 0.2; // Adjust this as needed
 
+  UsbCamera camera1;
   public RobotContainer()
   {
     // Get our auto commands.
@@ -53,9 +58,10 @@ public class RobotContainer {
 
     // Configure the trigger bindings
     configureBindings();
-  }
 
-  boolean newEle = true;
+    camera1 = CameraServer.startAutomaticCapture(0);
+    camera1.setConnectionStrategy(ConnectionStrategy.kKeepOpen);
+  }
 
   private void configureBindings() {
     setDriveMode();
@@ -70,19 +76,11 @@ public class RobotContainer {
     Constants.operatorController.axisGreaterThan(1,0.25).onTrue(m_shooter.runShooter(0.8)).onFalse(m_shooter.stopShooter());
     Constants.operatorController.axisLessThan(1,-0.25).onTrue(m_shooter.runShooter(-0.8)).onFalse(m_shooter.stopShooter());
     // Elevator
-    if (newEle) {
-      Constants.operatorController.leftBumper().onTrue(m_elevator.NewEle("Bottom")); // Left Bumper for Bottom
-      Constants.operatorController.povDown().onTrue(m_elevator.NewEle("L1")); // Down on the DPad for L1
-      Constants.operatorController.povLeft().onTrue(m_elevator.NewEle("L2")); // Left on the DPad for L2
-      Constants.operatorController.povRight().onTrue(m_elevator.NewEle("L3")); // Right on the DPad for L3
-      Constants.operatorController.povUp().onTrue(m_elevator.NewEle("L4")); // Up on the DPad for L4
-    } else {
-      Constants.operatorController.leftBumper().onTrue(m_elevator.runElevBtm()); // Left Bumper for Bottom
-      Constants.operatorController.povDown().onTrue(m_elevator.runElevL1()); // Down on the DPad for L1
-      Constants.operatorController.povLeft().onTrue(m_elevator.runElevL2()); // Left on the DPad for L2
-      Constants.operatorController.povRight().onTrue(m_elevator.runElevL3()); // Right on the DPad for L3
-      Constants.operatorController.povUp().onTrue(m_elevator.runElevL4()); // Up on the DPad for L4
-    }
+    Constants.operatorController.leftBumper().onTrue(m_elevator.NewEle("Bottom")); // Left Bumper for Bottom
+    Constants.operatorController.povDown().onTrue(m_elevator.NewEle("L1")); // Down on the DPad for L1
+    Constants.operatorController.povLeft().onTrue(m_elevator.NewEle("L2")); // Left on the DPad for L2
+    Constants.operatorController.povRight().onTrue(m_elevator.NewEle("L3")); // Right on the DPad for L3
+    Constants.operatorController.povUp().onTrue(m_elevator.NewEle("L4")); // Up on the DPad for L4
     // Elevator Manual
     Constants.operatorController.leftTrigger(.1).onTrue(m_elevator.ManualRun(1)).onFalse(m_elevator.ManualStop());
     Constants.operatorController.start().onTrue(m_elevator.ManualRun(-1)).onFalse(m_elevator.ManualStop());
@@ -105,7 +103,7 @@ public class RobotContainer {
       Constants.operatorController.rightTrigger(0.1).whileTrue(drivebase.aimAndDrive(11, 0, .2)); // Track far left (20/11)
     }
 
-    new Trigger(() -> driverXbox.getLeftTriggerAxis() > 0.1 || driverXbox.getRightTriggerAxis() > 0.1)
+    new Trigger(() -> Constants.driverController.getLeftTriggerAxis() > 0.1 || Constants.driverController.getRightTriggerAxis() > 0.1)
       .whileTrue(new RunCommand(() -> {
         double leftTrigger = driverXbox.getLeftTriggerAxis();
         double rightTrigger = driverXbox.getRightTriggerAxis();
@@ -128,7 +126,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("ElevatorL3", m_elevator.runElevL3());
     NamedCommands.registerCommand("ElevatorL4", m_elevator.runElevL4());
     NamedCommands.registerCommand("ElevatorStop", m_elevator.ManualStop());
-    NamedCommands.registerCommand("RunShooter", m_shooter.runShooter(1));
+    NamedCommands.registerCommand("RunShooter", m_shooter.runShooter(0.8));
     NamedCommands.registerCommand("StopShooter", m_shooter.stopShooter());
   }
 
