@@ -82,11 +82,26 @@ public class RobotContainer {
     Constants.operatorController.povRight().onTrue(m_elevator.NewEle("L3")); // Right on the DPad for L3
     Constants.operatorController.povUp().onTrue(m_elevator.NewEle("L4")); // Up on the DPad for L4
     // Elevator Manual
-    Constants.operatorController.leftTrigger(.1).onTrue(m_elevator.ManualRun(1)).onFalse(m_elevator.ManualStop());
-    Constants.operatorController.start().onTrue(m_elevator.ManualRun(-1)).onFalse(m_elevator.ManualStop());
+    Constants.operatorController.a().onTrue(m_elevator.ManualRun(1)).onFalse(m_elevator.ManualStop());
+    Constants.operatorController.y().onTrue(m_elevator.ManualRun(-0.8)).onFalse(m_elevator.ManualStop());
+    
+    new Trigger(() -> Constants.driverController.getLeftTriggerAxis() > 0.1 || Constants.driverController.getRightTriggerAxis() > 0.1)
+      .whileTrue(new RunCommand(() -> {
+        double leftTrigger = driverXbox.getLeftTriggerAxis();
+        double rightTrigger = driverXbox.getRightTriggerAxis();
+
+        // Calculate strafe speed: leftTrigger moves left, rightTrigger moves right
+        double strafeSpeed = (rightTrigger - leftTrigger) * maxStrafeSpeed;
+
+        // Robot-relative strafe (no forward/backward movement, no rotation)
+        drivebase.drive(new ChassisSpeeds(0, strafeSpeed, 0));
+    }, drivebase));
 
     // AprilTags 
     // https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/Apriltag_Images_and_User_Guide.pdf (pg 2 for map)
+    /*
+     * As much as I liked this code and "had fun" making it we have decided to not use apriltags -
+     * but I am going to keep this here for furture reference
     if (Constants.alliance.isPresent() && Constants.alliance.get() == Alliance.Blue) {
       Constants.operatorController.b().whileTrue(drivebase.aimAndDrive(17, 0, .2)); // Track close right (17/8) 
       Constants.operatorController.a().whileTrue(drivebase.aimAndDrive(18, 0, .2));; // Track close mid (18/7)
@@ -102,18 +117,7 @@ public class RobotContainer {
       Constants.operatorController.rightBumper().whileTrue(drivebase.aimAndDrive(10, 0, .2)); // Track far mid (21/10)
       Constants.operatorController.rightTrigger(0.1).whileTrue(drivebase.aimAndDrive(11, 0, .2)); // Track far left (20/11)
     }
-
-    new Trigger(() -> Constants.driverController.getLeftTriggerAxis() > 0.1 || Constants.driverController.getRightTriggerAxis() > 0.1)
-      .whileTrue(new RunCommand(() -> {
-        double leftTrigger = driverXbox.getLeftTriggerAxis();
-        double rightTrigger = driverXbox.getRightTriggerAxis();
-
-        // Calculate strafe speed: leftTrigger moves left, rightTrigger moves right
-        double strafeSpeed = (rightTrigger - leftTrigger) * maxStrafeSpeed;
-
-        // Robot-relative strafe (no forward/backward movement, no rotation)
-        drivebase.drive(new ChassisSpeeds(0, strafeSpeed, 0));
-    }, drivebase));
+    */
   }
 
   /**
