@@ -19,6 +19,7 @@ import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -36,6 +37,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
@@ -244,51 +246,60 @@ public class SwerveSubsystem extends SubsystemBase
   public PIDConstants apirlTagsDrive = new PIDConstants(0.00023, 0.0000002, 1);
   public PIDConstants apirlTagsAngle = new PIDConstants(0.004, 0, 1.5); 
 
+  private final PhotonCamera camera = new PhotonCamera("Microsoft_LifeCame_HD-3000");
   public boolean targetVisible = false;
-  public Command aimAndDrive(int TagID, double limitSpeed, double Reefdistance)
-  {
-    PhotonCamera camera = new PhotonCamera("Microsoft_LifeCame_HD-3000");
-    return run(() -> {
-      var results = camera.getAllUnreadResults();
+
+  public Command aimAndDrive(int tagID, double limitSpeed, double reefDistance) {
+    return new RunCommand(() -> {
+      // Reset target visibility
+      targetVisible = false;
+
+      // Get latest vision result
+      var result = camera.getLatestResult();
+      if (!result.hasTargets()) {
+        return; // No targets, do nothing
+      }
+
       double targetYaw = 0.0;
       double targetRange = 0.0;
-      if (!results.isEmpty()) {
-        var result = results.get(results.size() -1);
-        if (result.hasTargets()) {
-          for (var target : result.getTargets()) {
-            if (target.getFiducialId() == TagID) {
-              targetYaw = target.getYaw();
-              targetRange = PhotonUtils.calculateDistanceToTargetMeters(
-                0.5, // Camera Hight from ground in Meters 
-                Units.inchesToMeters(12.13),
-                Units.degreesToRadians(0), // Camera Pitch
-                Units.degreesToRadians(target.getPitch())
-              );
-              targetVisible = true;
-            }
-          }
+
+      // Find the correct AprilTag
+      for (var target : result.getTargets()) {
+        if (target.getFiducialId() == tagID) {
+          targetYaw = target.getYaw();
+          targetRange = PhotonUtils.calculateDistanceToTargetMeters(
+              0.5, // Camera height in meters
+              Units.inchesToMeters(12.13),
+              Units.degreesToRadians(0), // Camera pitch
+              Units.degreesToRadians(target.getPitch())
+          );
+          targetVisible = true;
+          break; // Stop checking once we find the correct tag
         }
       }
-      if (targetVisible == true) {
-        // 0 is the target angle
-        var turn = (0 - targetYaw) * apirlTagsAngle.kP * Constants.MAX_SPEED;
-        // 1.25 is the target distance in meters
-        var targDis = 0.0;
-        if (Reefdistance > 0) {targDis = Reefdistance;} else {targDis = 1.25;}
-        // Speed Reducer
-        var speedRed = 1.0;
-        // should we overwrite default, also make sure its not 0
-        if (limitSpeed < 1.0 && limitSpeed > 0.0) {speedRed = limitSpeed;}
-        var forward = ((targDis - targetRange) * apirlTagsDrive.kP * Constants.MAX_SPEED) * speedRed;
-        drive(
-          getTargetSpeeds(
-            forward,
-            0,
-            Rotation2d.fromDegrees(turn)
-          )
-        );
+
+      if (!targetVisible) {
+        return; // No valid target found, exit command
       }
-    });
+
+      // Calculate rotation (clamped to prevent oversteering)
+      double turn = MathUtil.clamp(
+          (0 - targetYaw) * apirlTagsAngle.kP * Constants.MAX_SPEED,
+          -0.5, 0.5 // Limit turning speed to avoid oscillation
+      );
+
+      // Set target distance
+      double targetDistance = (reefDistance > 0) ? reefDistance : 1.25;
+
+      // Apply speed limiter
+      double speedLimiter = (limitSpeed > 0 && limitSpeed < 1.0) ? limitSpeed : 1.0;
+
+      // Calculate forward speed
+      double forwardSpeed = ((targetDistance - targetRange) * apirlTagsDrive.kP * Constants.MAX_SPEED) * speedLimiter;
+
+      // Drive towards target
+      drive(new ChassisSpeeds(forwardSpeed, 0, turn));
+    }, this);
   }
 
 
