@@ -33,12 +33,12 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
 public class RobotContainer {
-  private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
-  final CommandXboxController driverXbox = new CommandXboxController(0);
-  final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
-  final ShooterSubsystem m_shooter = new ShooterSubsystem();
-  private final SendableChooser<Command> autoChooser;
-  private final double maxStrafeSpeed = 0.2; // Adjust this as needed
+  private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo")); // Init drivebase from config
+  final CommandXboxController driverXbox = new CommandXboxController(0); // Just because
+  final ElevatorSubsystem m_elevator = new ElevatorSubsystem(); // Init elevator in container
+  final ShooterSubsystem m_shooter = new ShooterSubsystem(); // Init shooter in container
+  private final SendableChooser<Command> autoChooser; // Init auto chooser
+  private final double maxStrafeSpeed = 0.2; // maxStrafe Speed for crabwalk
 
   UsbCamera camera1;
   public RobotContainer()
@@ -82,12 +82,17 @@ public class RobotContainer {
 
     // "Crabwalk" || Left/Right move (Makes lining up easier by 100 times)
     // Do note this is robot-relative
+    //------//
+    // Make a new Trigger with the boolean supplier of the controllers trigger axis to make sure we actually pressed them
     new Trigger(() -> Constants.driverController.getLeftTriggerAxis() > 0.1 || Constants.driverController.getRightTriggerAxis() > 0.1)
       .whileTrue(new RunCommand(() -> {
+        // Get the trigger values
         double leftTrigger = driverXbox.getLeftTriggerAxis();
         double rightTrigger = driverXbox.getRightTriggerAxis();
 
         // Calculate strafe speed: leftTrigger moves left, rightTrigger moves right
+        // (Just determines which way to go by with one is greater)
+        // (Right +value and Left -value)
         double strafeSpeed = (rightTrigger - leftTrigger) * maxStrafeSpeed;
 
         // Robot-relative strafe (no forward/backward movement, no rotation)
@@ -99,8 +104,11 @@ public class RobotContainer {
      */
 
     // Shooter
-    Constants.operatorController.axisGreaterThan(1,0.25).onTrue(m_shooter.runShooter(0.8)).onFalse(m_shooter.stopShooter());
-    Constants.operatorController.axisLessThan(1,-0.25).onTrue(m_shooter.runShooter(-0.8)).onFalse(m_shooter.stopShooter());
+    // Constants.operatorController.axisGreaterThan(1,0.25).onTrue(m_shooter.runShooter(0.8)).onFalse(m_shooter.stopShooter()); // Old
+    // Constants.operatorController.axisLessThan(1,-0.25).onTrue(m_shooter.runShooter(-0.8)).onFalse(m_shooter.stopShooter()); // Old
+    Constants.operatorController.rightTrigger(0.1).onTrue(m_shooter.runShooter(0.8)).onFalse(m_shooter.stopShooter()); // We pressing trigger? If so run shooter until we aren't
+    Constants.operatorController.leftTrigger(0.1).onTrue(m_shooter.runShooter(-0.8)).onFalse(m_shooter.stopShooter()); // // We pressing trigger? If so run shooter in rev until we aren't
+    
     // Elevator
     Constants.operatorController.leftBumper().onTrue(m_elevator.NewEle("Bottom")); // Left Bumper for Bottom
     Constants.operatorController.povDown().onTrue(m_elevator.NewEle("L1")); // Down on the DPad for L1
@@ -108,8 +116,8 @@ public class RobotContainer {
     Constants.operatorController.povRight().onTrue(m_elevator.NewEle("L3")); // Right on the DPad for L3
     Constants.operatorController.povUp().onTrue(m_elevator.NewEle("L4")); // Up on the DPad for L4
     // Elevator Manual
-    Constants.operatorController.a().onTrue(m_elevator.ManualRun(1)).onFalse(m_elevator.ManualStop());
-    Constants.operatorController.y().onTrue(m_elevator.ManualRun(-0.8)).onFalse(m_elevator.ManualStop());
+    Constants.operatorController.a().onTrue(m_elevator.ManualRun(1)).onFalse(m_elevator.Stop()); // Manual up for Elevator (No limitswitches)
+    Constants.operatorController.y().onTrue(m_elevator.ManualRun(-0.8)).onFalse(m_elevator.Stop()); // Manual down for Elevator (No limitswitches) 
 
     // AprilTags 
     // https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/Apriltag_Images_and_User_Guide.pdf (pg 2 for map)
@@ -143,7 +151,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("ElevatorL2", m_elevator.runElevL2());
     NamedCommands.registerCommand("ElevatorL3", m_elevator.runElevL3());
     NamedCommands.registerCommand("ElevatorL4", m_elevator.runElevL4());
-    NamedCommands.registerCommand("ElevatorStop", m_elevator.ManualStop());
+    NamedCommands.registerCommand("ElevatorStop", m_elevator.Stop());
     NamedCommands.registerCommand("RunShooter", m_shooter.runShooter(0.8));
     NamedCommands.registerCommand("StopShooter", m_shooter.stopShooter());
   }
@@ -212,11 +220,11 @@ public class RobotContainer {
    * @return drivebase.setDefaultCommand
    */
   public void setDriveMode() {
-    Command driveRobotOrientedAngularVelocity = drivebase.driveFieldOriented(driveRobotOriented);
-    Command driveSetpointGen = drivebase.driveWithSetpointGeneratorFieldRelative(driveDirectAngle);
-    Command driveFieldOrientedAnglularVelocityKeyboard = drivebase.driveFieldOriented(driveAngularVelocityKeyboard);
-    Command driveSetpointGenKeyboard = drivebase.driveWithSetpointGeneratorFieldRelative(driveDirectAngleKeyboard);
-    Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
+    // Command driveRobotOrientedAngularVelocity = drivebase.driveFieldOriented(driveRobotOriented);
+    // Command driveSetpointGen = drivebase.driveWithSetpointGeneratorFieldRelative(driveDirectAngle);
+    // Command driveFieldOrientedAnglularVelocityKeyboard = drivebase.driveFieldOriented(driveAngularVelocityKeyboard);
+    // Command driveSetpointGenKeyboard = drivebase.driveWithSetpointGeneratorFieldRelative(driveDirectAngleKeyboard);
+    // Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
     Command driveFieldOrientedDirectAngleKeyboard = drivebase.driveFieldOriented(driveDirectAngleKeyboard);
     Command driveFieldOrientedDirectAngle = drivebase.driveFieldOriented(driveDirectAngle);
 
