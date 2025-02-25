@@ -4,10 +4,10 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.PathPlannerAuto;
+// import com.pathplanner.lib.commands.PathPlannerAuto;
+// import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import com.pathplanner.lib.auto.AutoBuilder;
-
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.cscore.VideoSource.ConnectionStrategy;
@@ -17,7 +17,6 @@ import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -47,6 +46,9 @@ public class RobotContainer {
     // Get our auto commands.
     pathplannerCommands();
 
+    // Nice to have so if testing one thing it doesn't spam DS
+    // enable if you are actually driving so that you will know if -
+    // something got disconnected
     DriverStation.silenceJoystickConnectionWarning(true);
 
     // Create the autochooser for the driver station dashboard
@@ -59,18 +61,42 @@ public class RobotContainer {
     // Configure the trigger bindings
     configureBindings();
 
+    // Start camera capture
     camera1 = CameraServer.startAutomaticCapture(0);
+    // Keep the camera feed open
     camera1.setConnectionStrategy(ConnectionStrategy.kKeepOpen);
   }
 
   private void configureBindings() {
+    // set our drive mode
     setDriveMode();
 
+    /*
+     * Driver controls
+     */
     Constants.driverController.a().onTrue((Commands.runOnce(drivebase::zeroGyro)));
     Constants.driverController.leftBumper().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
     Constants.driverController.rightBumper().onTrue(Commands.none());
     // Constants.driverController.x().onTrue(Commands.runOnce(drivebase::addFakeVisionReading));
     // Constants.driverController.b().whileTrue(drivebase.driveToPose(new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0))));
+
+    // "Crabwalk" || Left/Right move (Makes lining up easier by 100 times)
+    // Do note this is robot-relative
+    new Trigger(() -> Constants.driverController.getLeftTriggerAxis() > 0.1 || Constants.driverController.getRightTriggerAxis() > 0.1)
+      .whileTrue(new RunCommand(() -> {
+        double leftTrigger = driverXbox.getLeftTriggerAxis();
+        double rightTrigger = driverXbox.getRightTriggerAxis();
+
+        // Calculate strafe speed: leftTrigger moves left, rightTrigger moves right
+        double strafeSpeed = (rightTrigger - leftTrigger) * maxStrafeSpeed;
+
+        // Robot-relative strafe (no forward/backward movement, no rotation)
+        drivebase.drive(new ChassisSpeeds(0, strafeSpeed, 0));
+    }, drivebase));
+
+    /*
+     * Operator Controls
+     */
 
     // Shooter
     Constants.operatorController.axisGreaterThan(1,0.25).onTrue(m_shooter.runShooter(0.8)).onFalse(m_shooter.stopShooter());
@@ -84,18 +110,6 @@ public class RobotContainer {
     // Elevator Manual
     Constants.operatorController.a().onTrue(m_elevator.ManualRun(1)).onFalse(m_elevator.ManualStop());
     Constants.operatorController.y().onTrue(m_elevator.ManualRun(-0.8)).onFalse(m_elevator.ManualStop());
-    
-    new Trigger(() -> Constants.driverController.getLeftTriggerAxis() > 0.1 || Constants.driverController.getRightTriggerAxis() > 0.1)
-      .whileTrue(new RunCommand(() -> {
-        double leftTrigger = driverXbox.getLeftTriggerAxis();
-        double rightTrigger = driverXbox.getRightTriggerAxis();
-
-        // Calculate strafe speed: leftTrigger moves left, rightTrigger moves right
-        double strafeSpeed = (rightTrigger - leftTrigger) * maxStrafeSpeed;
-
-        // Robot-relative strafe (no forward/backward movement, no rotation)
-        drivebase.drive(new ChassisSpeeds(0, strafeSpeed, 0));
-    }, drivebase));
 
     // AprilTags 
     // https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/Apriltag_Images_and_User_Guide.pdf (pg 2 for map)
