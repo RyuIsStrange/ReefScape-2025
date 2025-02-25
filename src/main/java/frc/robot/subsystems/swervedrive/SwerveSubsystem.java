@@ -292,7 +292,7 @@ public class SwerveSubsystem extends SubsystemBase
 
       // Calculate rotation (clamped to prevent oversteering)
       double turn = MathUtil.clamp(
-          (0 - targetYaw) * apirlTagsAngle.kP * Constants.MAX_SPEED,
+          (0 - targetYaw) * apirlTagsAngle.kP * Constants.MAX_SPEED, // Target calculations
           -0.5, 0.5 // Limit turning speed to avoid oscillation
       );
 

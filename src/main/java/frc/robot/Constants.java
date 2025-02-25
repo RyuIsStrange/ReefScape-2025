@@ -54,6 +54,8 @@ public final class Constants
     public static final double TURN_CONSTANT    = 6;
   }
 
+  // Subsystem motor Ids
+  // Just felt like setting them here this year
   public static class SubMotorIDs {
     public static final int kElevatorID = 13;
     public static final int kShooterMLeft = 14;

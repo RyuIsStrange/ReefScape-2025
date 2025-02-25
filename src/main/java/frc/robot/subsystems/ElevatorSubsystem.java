@@ -16,60 +16,40 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class ElevatorSubsystem extends SubsystemBase {
-    private final SparkMax m_Elevator;
-    private final SparkMaxConfig config = new SparkMaxConfig();
-    private final DigitalInput m_bottomLimit = new DigitalInput(0);
-    private final DigitalInput m_L1 = new DigitalInput(1);
-    private final DigitalInput m_L2 = new DigitalInput(2);
-    private final DigitalInput m_L3 = new DigitalInput(3);
-    private final DigitalInput m_L4 = new DigitalInput(4);
-    // private final DigitalInput m_upperLimit = new DigitalInput(5); // We dont have rn
+    private final SparkMax m_Elevator; // Define the sparkmax for elevator
+    private final SparkMaxConfig config = new SparkMaxConfig(); // Init the sparkMax config
+    private final DigitalInput m_bottomLimit = new DigitalInput(0); // Init bottom limitswitch
+    private final DigitalInput m_L1 = new DigitalInput(1); // Init L1 limit
+    private final DigitalInput m_L2 = new DigitalInput(2); // Init L2 limit
+    private final DigitalInput m_L3 = new DigitalInput(3); // Init L3 limit
+    private final DigitalInput m_L4 = new DigitalInput(4); // Init L4 Limit
+    // private final DigitalInput m_upperLimit = new DigitalInput(5); // We are just going to use L4 as upper limit
 
     public ElevatorSubsystem() {
-        m_Elevator = new SparkMax(Constants.SubMotorIDs.kElevatorID, MotorType.kBrushless);
-        config.idleMode(IdleMode.kBrake);
-        m_Elevator.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        m_Elevator = new SparkMax(Constants.SubMotorIDs.kElevatorID, MotorType.kBrushless); // Actually set the values for Elevator
+        config.idleMode(IdleMode.kBrake); // Set Elevator motor to brake mode
+        m_Elevator.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters); // Apply the config
     }
 
+    // Make the BooleanSupplier check into a function so I dont have to put it into every command that needs it
     public BooleanSupplier switchStates(DigitalInput limitSwitch) {
         return () -> limitSwitch.get() == false;
     }
 
-    public Command runElevBtm() {
-        return run(() -> {
-            m_Elevator.set(-0.9);
-        })
-        .until(switchStates(m_bottomLimit)) // Go until bottom limit switch
-        .andThen(ManualStop());
+    // Manual Controls
+    
+    // Run the motor with the double speed
+    public Command ManualRun(double speed) {
+        return run(() -> m_Elevator.set(speed));
     }
-    public Command runElevL1() {
-        return runOnce(() -> 
-            m_Elevator.set(.9)
-        )
-        .until(switchStates(m_L1)) // go until L1 switch
-        .andThen(ManualStop());
+    // Stop the motor
+    public Command Stop() {
+        return run(() -> 
+            m_Elevator.set(0)
+        );
     }
-    public Command runElevL2() {
-        return run(() -> {
-            m_Elevator.set(.9);
-        })
-        .until(switchStates(m_L2)) // go until L2 switch
-        .andThen(ManualStop());
-    }
-    public Command runElevL3() {
-        return run(() -> {
-            m_Elevator.set(.9);
-        })
-        .until(switchStates(m_L3)) // go until L3 switch
-        .andThen(ManualStop());
-    }
-    public Command runElevL4() {
-        return run(() -> {
-            m_Elevator.set(.9);
-        })
-        .until(switchStates(m_L4)) // go until this one
-        .andThen(ManualStop());
-    }
+
+    // New Elevator command (Non-Auto)
 
     /**
      * Determines if the current level is above the target level
@@ -79,8 +59,14 @@ public class ElevatorSubsystem extends SubsystemBase {
         return levels.indexOf(current) > levels.indexOf(target);
     }
 
+    // Define this outside of the command so that there is a "currentLevel" value of null so it doesn't freak out
     DigitalInput currentLevel = null;
 
+    // Define the command
+    /*
+     * I need to test if you can just use this off the rip or if you actually have to press bottom before running anything
+     * Like we have been doing to make sure it "knows" were it is.
+     */
     public Command NewEle(String level) {
         // Map level names to corresponding limit switches
         Map<String, DigitalInput> levelMap = Map.of(
@@ -93,11 +79,13 @@ public class ElevatorSubsystem extends SubsystemBase {
 
         // Ensure the requested level exists
         if (!levelMap.containsKey(level)) {
-            return ManualStop();
+            return Stop();
         }
 
+        // Get the target switch from the map
         DigitalInput targetSwitch = levelMap.get(level);
 
+        // run the fun things
         return run(() -> {
             // Find the current position by checking which switch is triggered first (false = triggered)
             if (!m_L4.get()) currentLevel = m_L4;
@@ -107,33 +95,61 @@ public class ElevatorSubsystem extends SubsystemBase {
             else if (!m_bottomLimit.get()) currentLevel = m_bottomLimit;
     
             if (currentLevel == null || currentLevel == targetSwitch) {
-                m_Elevator.set(0); // Already at the desired level, stop motor
+                m_Elevator.set(0); // Already at the desired level, stop motor or nothing has been defined as currentLevel
             } else if (isAbove(currentLevel, targetSwitch)) {
                 m_Elevator.set(-0.9); // Move down
             } else {
                 m_Elevator.set(1); // Move up
             }
         })
-        .until(switchStates(targetSwitch))
-        .andThen(ManualStop());
+        .until(switchStates(targetSwitch)) // Until we reach target
+        .andThen(Stop()); // Then stop
     }
 
-    // Manual Controls
+    // "Old" Elevator commands (Auto)
+    // I just didn't feel like having to define some other things for auto
 
-    public Command ManualRun(double speed) {
-        return run(() -> m_Elevator.set(speed));
+    public Command runElevBtm() {
+        return run(() -> {
+            m_Elevator.set(-0.9);
+        })
+        .until(switchStates(m_bottomLimit)) // Go until bottom limit switch
+        .andThen(Stop());
     }
-
-    public Command ManualStop() {
-        return run(() -> 
-            m_Elevator.set(0)
-        );
+    public Command runElevL1() {
+        return runOnce(() -> 
+            m_Elevator.set(.9)
+        )
+        .until(switchStates(m_L1)) // go until L1 switch
+        .andThen(Stop());
+    }
+    public Command runElevL2() {
+        return run(() -> {
+            m_Elevator.set(.9);
+        })
+        .until(switchStates(m_L2)) // go until L2 switch
+        .andThen(Stop());
+    }
+    public Command runElevL3() {
+        return run(() -> {
+            m_Elevator.set(.9);
+        })
+        .until(switchStates(m_L3)) // go until L3 switch
+        .andThen(Stop());
+    }
+    public Command runElevL4() {
+        return run(() -> {
+            m_Elevator.set(.9);
+        })
+        .until(switchStates(m_L4)) // go until this one
+        .andThen(Stop());
     }
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Elevator Encoder", m_Elevator.getEncoder().getPosition());
-        System.out.println(currentLevel);
+        // SmartDashboard.putNumber("Elevator Encoder", m_Elevator.getEncoder().getPosition()); // Have this for testing reasons
+        SmartDashboard.putData("Current Level", currentLevel); // Push this to dashboard so I can debug faster @ comp
+        System.out.println(currentLevel); // For testing, comment out later in Comp
     }
 }
 
