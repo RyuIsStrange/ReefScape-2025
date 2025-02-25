@@ -37,35 +37,35 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public Command runElevBtm() {
         return run(() -> {
-            m_Elevator.set(-0.5);
+            m_Elevator.set(-0.9);
         })
         .until(switchStates(m_bottomLimit)) // Go until bottom limit switch
         .andThen(ManualStop());
     }
     public Command runElevL1() {
         return runOnce(() -> 
-            m_Elevator.set(.5)
+            m_Elevator.set(.9)
         )
         .until(switchStates(m_L1)) // go until L1 switch
         .andThen(ManualStop());
     }
     public Command runElevL2() {
         return run(() -> {
-            m_Elevator.set(.5);
+            m_Elevator.set(.9);
         })
         .until(switchStates(m_L2)) // go until L2 switch
         .andThen(ManualStop());
     }
     public Command runElevL3() {
         return run(() -> {
-            m_Elevator.set(.5);
+            m_Elevator.set(.9);
         })
         .until(switchStates(m_L3)) // go until L3 switch
         .andThen(ManualStop());
     }
     public Command runElevL4() {
         return run(() -> {
-            m_Elevator.set(.5);
+            m_Elevator.set(.9);
         })
         .until(switchStates(m_L4)) // go until this one
         .andThen(ManualStop());
@@ -109,7 +109,7 @@ public class ElevatorSubsystem extends SubsystemBase {
             if (currentLevel == null || currentLevel == targetSwitch) {
                 m_Elevator.set(0); // Already at the desired level, stop motor
             } else if (isAbove(currentLevel, targetSwitch)) {
-                m_Elevator.set(-1); // Move down
+                m_Elevator.set(-0.9); // Move down
             } else {
                 m_Elevator.set(1); // Move up
             }
