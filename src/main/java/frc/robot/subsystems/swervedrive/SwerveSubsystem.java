@@ -6,6 +6,13 @@ package frc.robot.subsystems.swervedrive;
 
 import static edu.wpi.first.units.Units.Meter;
 
+// import edu.wpi.first.apriltag.AprilTagFieldLayout;
+// import edu.wpi.first.apriltag.AprilTagFields;
+// import edu.wpi.first.math.geometry.Pose3d;
+// import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+// import edu.wpi.first.wpilibj.DriverStation.Alliance;
+// import edu.wpi.first.math.controller.PIDController;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.commands.PathfindingCommand;
@@ -17,13 +24,9 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -31,8 +34,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -45,6 +46,7 @@ import frc.robot.subsystems.swervedrive.Vision.Cameras;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
@@ -254,17 +256,23 @@ public class SwerveSubsystem extends SubsystemBase
       // Reset target visibility
       targetVisible = false;
 
-      // Get latest vision result
-      var result = camera.getLatestResult();
-      if (!result.hasTargets()) {
-        return; // No targets, do nothing
+      // Get all unread results
+      List<PhotonPipelineResult> results = camera.getAllUnreadResults();
+      if (results.isEmpty()) {
+        return; // No targets detected, do nothing
       }
 
       double targetYaw = 0.0;
       double targetRange = 0.0;
 
+      // Process the latest result
+      var latestResult = results.get(results.size() - 1);
+      if (!latestResult.hasTargets()) {
+        return; // No valid targets, exit
+      }
+
       // Find the correct AprilTag
-      for (var target : result.getTargets()) {
+      for (var target : latestResult.getTargets()) {
         if (target.getFiducialId() == tagID) {
           targetYaw = target.getYaw();
           targetRange = PhotonUtils.calculateDistanceToTargetMeters(
