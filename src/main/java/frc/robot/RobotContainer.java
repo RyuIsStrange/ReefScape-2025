@@ -82,7 +82,7 @@ public class RobotContainer {
 
     // "Crabwalk" || Left/Right move (Makes lining up easier by 100 times)
     // Do note this is robot-relative
-    //------//
+              //------//
     // Make a new Trigger with the boolean supplier of the controllers trigger axis to make sure we actually pressed them
     new Trigger(() -> Constants.driverController.getLeftTriggerAxis() > 0.1 || Constants.driverController.getRightTriggerAxis() > 0.1)
       .whileTrue(new RunCommand(() -> {
@@ -116,8 +116,8 @@ public class RobotContainer {
     Constants.operatorController.povRight().onTrue(m_elevator.NewEle("L3")); // Right on the DPad for L3
     Constants.operatorController.povUp().onTrue(m_elevator.NewEle("L4")); // Up on the DPad for L4
     // Elevator Manual
-    Constants.operatorController.a().onTrue(m_elevator.ManualRun(1)).onFalse(m_elevator.Stop()); // Manual up for Elevator (No limitswitches)
-    Constants.operatorController.y().onTrue(m_elevator.ManualRun(-0.8)).onFalse(m_elevator.Stop()); // Manual down for Elevator (No limitswitches) 
+    Constants.operatorController.y().onTrue(m_elevator.ManualRun(1)).onFalse(m_elevator.Stop()); // Manual up for Elevator (No limit switches)
+    Constants.operatorController.a().onTrue(m_elevator.ManualRun(-0.8)).onFalse(m_elevator.Stop()); // Manual down for Elevator (No limit switches) 
 
     // AprilTags 
     // https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/Apriltag_Images_and_User_Guide.pdf (pg 2 for map)
