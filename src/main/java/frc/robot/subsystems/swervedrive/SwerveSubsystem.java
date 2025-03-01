@@ -251,7 +251,16 @@ public class SwerveSubsystem extends SubsystemBase
   private final PhotonCamera camera = new PhotonCamera("Microsoft_LifeCame_HD-3000");
   public boolean targetVisible = false;
 
-  public Command aimAndDrive(int tagID, double limitSpeed, double reefDistance) {
+  /**
+   * AprilTag tracking command, please note this actually hasn't been tested on a robot.
+   * 
+   * @param tagID - Which tag do you want to track
+   * @param limitSpeed - do you want to limit the robots speed? (If set to 0 defualts to no limit)
+   * @param trackDistance - How far do you want to stop from the target (In meters)
+   * @return {@link Command} with new {@link RunCommand}
+   * 
+   */
+  public Command aimAndDrive(int tagID, double limitSpeed, double trackDistance) {
     return new RunCommand(() -> {
       // Reset target visibility
       targetVisible = false;
@@ -262,7 +271,8 @@ public class SwerveSubsystem extends SubsystemBase
         return; // No targets detected, do nothing
       }
 
-      double targetYaw = 0.0;
+      // Reset values
+      double targetYaw = 0.0; 
       double targetRange = 0.0;
 
       // Process the latest result
@@ -274,14 +284,14 @@ public class SwerveSubsystem extends SubsystemBase
       // Find the correct AprilTag
       for (var target : latestResult.getTargets()) {
         if (target.getFiducialId() == tagID) {
-          targetYaw = target.getYaw();
-          targetRange = PhotonUtils.calculateDistanceToTargetMeters(
+          targetYaw = target.getYaw(); // Get the targets Yaw and set it to our target
+          targetRange = PhotonUtils.calculateDistanceToTargetMeters( // Calculate targetRange
               0.5, // Camera height in meters
-              Units.inchesToMeters(12.13),
+              Units.inchesToMeters(12.13), // Tag height
               Units.degreesToRadians(0), // Camera pitch
-              Units.degreesToRadians(target.getPitch())
+              Units.degreesToRadians(target.getPitch()) // Get the tag pitch
           );
-          targetVisible = true;
+          targetVisible = true; // Set the target to visible
           break; // Stop checking once we find the correct tag
         }
       }
@@ -293,11 +303,11 @@ public class SwerveSubsystem extends SubsystemBase
       // Calculate rotation (clamped to prevent oversteering)
       double turn = MathUtil.clamp(
           (0 - targetYaw) * apirlTagsAngle.kP * Constants.MAX_SPEED, // Target calculations
-          -0.5, 0.5 // Limit turning speed to avoid oscillation
+          -0.8, 0.8 // Limit turning speed to avoid oscillation
       );
 
       // Set target distance
-      double targetDistance = (reefDistance > 0) ? reefDistance : 1.25;
+      double targetDistance = (trackDistance > 0) ? trackDistance : 1.25;
 
       // Apply speed limiter
       double speedLimiter = (limitSpeed > 0 && limitSpeed < 1.0) ? limitSpeed : 1.0;
