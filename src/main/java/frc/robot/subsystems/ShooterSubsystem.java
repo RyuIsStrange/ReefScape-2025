@@ -25,6 +25,7 @@ public class ShooterSubsystem extends SubsystemBase {
         // Set the motor configs
         config_Left
             .idleMode(IdleMode.kBrake)
+            .inverted(true)
             ; // Leave this here to make config happy 
 
         // Apply the motor configuration
@@ -38,7 +39,6 @@ public class ShooterSubsystem extends SubsystemBase {
         // Set the motor configs
         config_Right
             .idleMode(IdleMode.kBrake)
-            .inverted(true)
             ; // Leave this here to make config happy
 
         // Apply the motor configuration
