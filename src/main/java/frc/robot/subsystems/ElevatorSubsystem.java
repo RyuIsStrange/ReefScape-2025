@@ -43,11 +43,18 @@ public class ElevatorSubsystem extends SubsystemBase {
         return run(() -> m_Elevator.set(speed));
     }
     // Stop the motor
+    public Command ManualStop() {
+        return run(() -> 
+            m_Elevator.set(0)
+        );
+    }
+    // Stop the motor
     public Command Stop() {
         return run(() -> 
             m_Elevator.set(0)
         );
     }
+
 
     // New Elevator command (Non-Auto)
 
@@ -84,7 +91,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
         // Get the target switch from the map
         DigitalInput targetSwitch = levelMap.get(level);
-
+        
         // run the fun things
         return run(() -> {
             // Find the current position by checking which switch is triggered first (false = triggered)
@@ -148,8 +155,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         // SmartDashboard.putNumber("Elevator Encoder", m_Elevator.getEncoder().getPosition()); // Have this for testing reasons
-        SmartDashboard.putData("Current Level", currentLevel); // Push this to dashboard so I can debug faster @ comp
-        System.out.println(currentLevel); // For testing, comment out later in Comp
+        // System.out.println(currentLevel); // For testing, comment out later in Comp
     }
 }
 
